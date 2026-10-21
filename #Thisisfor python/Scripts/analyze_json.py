@@ -5,20 +5,20 @@ import re
 import pandas as pd
 
 # =========================================================
-# 1. 四國語言 TWICE 粉絲黑話特徵字典庫
-# =========================================================
+# 1. Four-language TWICE fan slang dictionary
+# # =========================================================
 CORE_FAN_JARGON = [
-    # 官方粉絲名 (英/中/韓/日)
+    # Official Fan Name (English/Chinese/Korean/Japanese)
     r"#once\b", r"\bonces\b", "萬斯", "万斯", "元斯", "원스", "ワンス",
-    # 應援手燈與內部專用語
+    # Support light sticks and internal phrases
     "candybong", "candy bong", "糖果棒", "手燈", "手灯", "應援棒", "应援棒",
     "캔디봉", "응원봉", "キャンディー棒", "ペンライト",
     "twicetagram", "withyouth", "strategy", "ten: the story goes on",
-    # 粉絲圈術語
+    # Fan circle terminology
     "ot9", "bias", "ult group", "fave", "stan twice", "翻牌", "應援板", "应援板", "空耳",
     "최애", "차애", "덕질", "공봉", "막콘", "첫콘", "올콘", "슬로건",
     "参戦", "現場参戦", "銀テ", "掛け声", "推し", "自引き",
-    # 成員外號 / 暱稱 / 韓文日文小名
+    # Member nicknames / nicknames / Korean and Japanese pet names
     "林三歲", "林三岁", "兔牙", "nabongs", "나봉스", "ナヨン",
     "無趣哥", "无趣哥", "yoo", "ジョンヨン",
     "moguri", "모구리", "平井桃", "跳舞機器", "跳舞机器", "モモ",
@@ -28,7 +28,7 @@ CORE_FAN_JARGON = [
     "dubu", "두부", "老鷹", "老鹰", "豆腐", "ダヒョン",
     "chaeng", "챙", "小猛獸", "小猛兽", "草莓公主", "彩寶", "チェヨン",
     "尤達", "尤达", "忙內", "忙内", "尤達瑜", "小瑜", "ツウィ", "ツウィペン",
-    # 小分隊與 CP 名
+    # Squad and CP Name
     "misamo", "미사모", "ミサモ", "2yeon", "mihyo", "saida", "michaeng", "satzu", "namo"
 ]
 
@@ -78,25 +78,25 @@ def score_and_classify(text: str, author_handle: str = ""):
         return "General Public", total_score, matched
 
 # =========================================================
-# 2. 全域遞迴讀取所有原始檔案並整合母體資料庫
+# 2. Recursively read all original files and integrate them into the parent database.
 # =========================================================
 def build_master_database():
     current_dir = os.getcwd()
     all_raw_files = []
     
-    # 遍歷當前目錄及所有子資料夾 (raw_data, Data base 等)
+    #Traverse the current directory and all subfolders (raw_data, Data base and so on)
     for root, dirs, files in os.walk(current_dir):
-        # 排除存放分析結果的資料夾
+        # Exclude folders containing analysis results
         if "final_output" in root:
             continue
         for file in files:
-            # 排除已生成的分析輸出檔案與系統檔
+            # Exclude the generated analysis output files and system files
             if file.startswith("twice_") or file.startswith("comparison_") or file.startswith("package"):
                 continue
             if file.endswith(".csv") or file.endswith(".json") or file.endswith(".xlsx"):
                 all_raw_files.append(os.path.join(root, file))
 
-    print(f"[*] 找到以下原始資料來源檔 (共 {len(all_raw_files)} 個):")
+    print(f"[*] Found the following raw data source files (total {len(all_raw_files)}):")
     for f in all_raw_files:
         print(f"    - {os.path.relpath(f, current_dir)}")
 
@@ -120,24 +120,24 @@ def build_master_database():
                 for _, row in df_temp.iterrows():
                     records.append(extract_standard_row(row.to_dict()))
         except Exception as e:
-            print(f"[!] 讀取檔案失敗 ({os.path.basename(file_path)}): {e}")
+            print(f"[!] Failed to read file ({os.path.basename(file_path)}): {e}")
 
     df_master = pd.DataFrame(records)
-    print(f"\n[✓] 全庫讀取完畢，原始合併母體總筆數: {len(df_master)} 筆")
+    print(f"\n[✓] The entire database has been read; the total number of entries in the original merged parent database is now complete.: {len(df_master)} posts.")
     return df_master
 
 def extract_standard_row(item: dict) -> dict:
-    """將來自不同平台或格式的欄位統整為標準欄位格式"""
-    # 唯一標識優先級
+    """Consolidate fields from different platforms or formats into a standard field format."""
+    # Unique identifier priority
     uid = item.get("entity_id") or item.get("id") or item.get("shortCode") or item.get("code") or ""
     url = item.get("url") or item.get("postUrl") or item.get("inputUrl") or ""
-    # 文字內容優先級
+    # Text content priority
     text = item.get("text") or item.get("caption") or item.get("clean_caption") or item.get("description") or ""
     if isinstance(text, dict):
         text = text.get("text", "")
-    # 作者欄位
+    # Author field
     author = item.get("author_handle") or item.get("owner_username") or item.get("author_name") or ""
-    # 互動指標
+    # Interaction metrics
     likes = item.get("likes") or item.get("likesCount") or 0
     comments = item.get("comments") or item.get("commentsCount") or 0
     posted_at = item.get("posted_at") or item.get("timestamp") or item.get("date") or ""
@@ -153,7 +153,7 @@ def extract_standard_row(item: dict) -> dict:
     }
 
 # =========================================================
-# 3. 去重、抽取 300 份樣本與比較分析
+# 3. Deduplication, selection of 300 samples, and comparative analysis.
 # =========================================================
 def main():
     df_master = build_master_database()
@@ -161,10 +161,10 @@ def main():
         print("[X] 錯誤：資料庫中沒有讀取到任何貼文！")
         return
 
-    # 去除空貼文
+    # Remove empty posts
     df_master = df_master[df_master["text"].str.len() > 0].copy()
 
-    # 查重去重（優先根據 url，若 url 無效則根據 uid 或文字雜湊）
+    # Detect and remove duplicates (prioritize URL; if the URL is invalid, use UID or random text).
     if df_master["url"].nunique() > 10:
         dedup_key = "url"
     elif df_master["uid"].nunique() > 10:
@@ -174,62 +174,62 @@ def main():
 
     before_dedup = len(df_master)
     df_unique = df_master.drop_duplicates(subset=[dedup_key]).copy()
-    print(f"[✓] 已根據 '{dedup_key}' 去重：去除 {before_dedup - len(df_unique)} 筆重複貼文，剩餘獨立貼文總庫存: {len(df_unique)} 筆。")
+    print(f"[✓] According to '{dedup_key}' Deduplication: removing duplicates {before_dedup - len(df_unique)} Duplicate posts, remaining independent posts in total inventory: {len(df_unique)} 筆。")
 
-    # 隨機抽取 300 份樣本
+    # 300 samples were randomly selected.
     TARGET_SAMPLE_SIZE = 300
     if len(df_unique) >= TARGET_SAMPLE_SIZE:
-        random.seed(42)  # 固定隨機種子，確保學術可重複性
+        random.seed(42)  # Fixed random seed to ensure academic reproducibility
         sample_indices = random.sample(list(df_unique.index), TARGET_SAMPLE_SIZE)
         df_sample = df_unique.loc[sample_indices].copy()
-        print(f"[*] 成功從全體資料庫隨機抽取 {TARGET_SAMPLE_SIZE} 份樣本！")
+        print(f"[*] Successfully selected {TARGET_SAMPLE_SIZE} samples randomly from the entire database.！")
     else:
         df_sample = df_unique.copy()
-        print(f"[!] 獨立貼文總數為 {len(df_unique)} 筆（少於 300 筆），已全數納入樣本。")
+        print(f"[!] Independent post count is {len(df_unique)} (less than 300), all posts included in the sample.")
 
-    # 執行黑話分類標註
+    # Implementing slang classification and labeling
     results = [score_and_classify(row["text"], row["author_handle"]) for _, row in df_sample.iterrows()]
     df_sample["classified_identity"] = [r[0] for r in results]
     df_sample["fan_score"] = [r[1] for r in results]
     df_sample["matched_jargon"] = [", ".join(r[2]) if r[2] else "None" for r in results]
 
-    # 特徵工程（文字長度與標籤數）
+    # Feature engineering (text length and number of tags)
     df_sample["text_length"] = df_sample["text"].apply(len)
     df_sample["hashtag_count"] = df_sample["text"].apply(lambda x: x.count("#"))
 
-    # 列印樣本分群統計
+    # Printed Sample Cluster Statistics
     print("\n" + "="*50)
-    print(f"【{len(df_sample)} 份樣本之身分識別分佈】")
+    print(f"【{len(df_sample)} Identity Recognition Distribution of Samples】")
     print(df_sample["classified_identity"].value_counts())
     print("="*50)
 
-    # 計算統計摘要（排除官方帳號後的粉絲 vs 大眾對比）
+    # Summary of Calculated Statistics (Comparison of Fans vs. the General Public, excluding official accounts)
     df_compare = df_sample[df_sample["classified_identity"].isin(["TWICE Fan", "General Public"])]
     summary_table = df_compare.groupby("classified_identity").agg(
-        樣本數=("classified_identity", "count"),
-        平均讚數=("likes", "mean"),
-        中位數讚數=("likes", "median"),
-        平均留言數=("comments", "mean"),
-        平均內文字數=("text_length", "mean"),
-        平均標籤數=("hashtag_count", "mean")
+        Sample_Count=("classified_identity", "count"),
+        Average_Likes=("likes", "mean"),
+        Median_Likes=("likes", "median"),
+        Average_Comments=("comments", "mean"),
+        Average_Text_Length=("text_length", "mean"),
+        Average_Hashtag_Count=("hashtag_count", "mean")
     ).round(2)
 
-    print("\n【TWICE 粉絲 vs 大眾 行為特徵比較表】")
+    print("\n【Comparison of Behavioral Characteristics of TWICE Fans vs. the General Public】")
     print(summary_table)
     print("="*50)
 
-    # 確保輸出目錄存在並導出檔案
+    # Ensure the output directory exists and export the archive.
     os.makedirs("final_output", exist_ok=True)
     
-    # 1. 輸出 300 份抽樣明細表
+    # 1. Output 300 sampling detail tables
     output_sample_csv = os.path.join("final_output", "twice_sample_300_classified.csv")
     df_sample.to_csv(output_sample_csv, index=False, encoding="utf-8-sig")
-    print(f"\n[✓] 抽樣明細已儲存至：{output_sample_csv}")
+    print(f"\n[✓] Sampling details have been stored to：{output_sample_csv}")
 
-    # 2. 輸出行為指標統計表
+    # 2. Output behavioral indicator statistics table
     output_summary_csv = os.path.join("final_output", "comparison_summary.csv")
     summary_table.to_csv(output_summary_csv, encoding="utf-8-sig")
-    print(f"[✓] 統計對比摘要已儲存至：{output_summary_csv}")
+    print(f"[✓] Statistical comparison summary has been stored to：{output_summary_csv}")
 
 if __name__ == "__main__":
     main()
